@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jenkins-pipeline"
+version = "0.1.0"
+description = "Jenkins CI/CD pipeline simulator workflows for Facetwork (FFL mixins, prompt blocks, deploy/rollback patterns)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "Apache-2.0"}
+authors = [{name = "Ralph Lemke"}]
+keywords = ["facetwork", "ffl", "jenkins", "ci-cd", "pipelines", "devops"]
+
+dependencies = [
+    "facetwork>=0.31.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "ruff>=0.8.0",
+]
+
+[project.urls]
+Repository = "https://github.com/rlemke/fwh_jenkins"
+
+[project.entry-points."facetwork.examples"]
+jenkins = "jenkins_pipeline:example"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+jenkins_pipeline = [
+    "ffl/*.ffl",
+    "ffl/*.json",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP"]
+ignore = ["E501", "E402", "B008"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "src/jenkins_pipeline/handlers"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
