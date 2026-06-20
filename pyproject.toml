@@ -26,8 +26,8 @@ dev = [
 [project.urls]
 Repository = "https://github.com/rlemke/fwh_jenkins"
 
-[project.entry-points."facetwork.examples"]
-jenkins = "jenkins_pipeline:example"
+[project.entry-points."facetwork.domains"]
+jenkins = "jenkins_pipeline:domain"
 
 [tool.setuptools.packages.find]
 where = ["src"]
