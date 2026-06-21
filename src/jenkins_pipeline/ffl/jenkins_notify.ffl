@@ -5,10 +5,10 @@ namespace jenkins.notify {
     /** Sends a Slack message to a channel with optional user mention. */
     event facet SlackNotify(channel: String, message: String,
         color: String = "good",
-        mention: String = "") => (sent: Boolean, timestamp: String)
+        mention: String = "") => (sent: Boolean, timestamp: String) with Effect(kind = "external") with Cost(tier = "cheap")
 
     /** Sends an email notification with optional build log attachment. */
     event facet EmailNotify(recipients: String, subject: String,
         body: String,
-        attach_log: Boolean = false) => (sent: Boolean, message_id: String)
+        attach_log: Boolean = false) => (sent: Boolean, message_id: String) with Effect(kind = "external") with Cost(tier = "cheap")
 }

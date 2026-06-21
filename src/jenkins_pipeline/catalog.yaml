@@ -1,0 +1,210 @@
+# Composability manifest for the jenkins-pipeline package.
+#
+# Machine-readable index so an LLM can DISCOVER + REUSE these CI/CD capabilities
+# by intent, the same way the platform's `fw_catalog_match` (workflow-level,
+# reuse-first) and `fw_capabilities` (facet-level capability index) tools work.
+#
+#   * `workflows` — entry-point pipelines, each with a natural-language `summary`
+#     (the kind of request it answers), `tags`, and a `param_schema` of the key
+#     parameters. Match an NL request against these before authoring anything new.
+#   * `facets` — a capability index of the composable CI/CD primitives by
+#     namespace, with `purpose`, `signature`, and the `effect`/`cost` taken
+#     verbatim from the `with Effect(...) / with Cost(...)` mixins in the FFL.
+#
+# This package is a CI/CD mixin-composition demo: the event facets simulate the
+# corresponding Jenkins operations (SCM checkout/merge, builds, tests, artifact
+# publishing, deploys, notifications). Effect/cost describe the operation each
+# facet *represents* — they all drive external systems (Jenkins agents, registries,
+# Kubernetes, Slack/SMTP); ArchiveArtifacts is `io` (workspace file collection).
+# The mixins in jenkins.mixins (Retry/Timeout/Credentials/Notification/
+# AgentLabel/Stash) are plain composition facets, not event facets, so they are
+# not indexed here. Accurate qualified names + signatures are sourced from the
+# .ffl; see `jenkins_pipeline.catalog.load_manifest()`.
+
+version: 1
+package: jenkins-pipeline
+
+workflows:
+  - qualified_name: jenkins.pipeline.JavaMavenCI
+    summary: >-
+      Build, test, and deploy a Java Maven project end to end — checkout with
+      SSH credentials, a Maven package build (timeout + retry), a JUnit test
+      stage, then a credentialed deploy with Slack notification. The preferred
+      entry point for "CI/CD for a Java/Maven repo".
+    tags: [ci-cd, java, maven, pipeline, build, test, deploy, mixins]
+    entry_point: true
+    param_schema:
+      repo: String
+      branch: String
+      environment: String
+
+  - qualified_name: jenkins.pipeline.DockerK8sDeploy
+    summary: >-
+      Build a Docker image from a repo, run a Trivy security scan, push the image
+      to a registry, deploy it to a Kubernetes cluster with replica scaling, and
+      announce the release on Slack. Use for "build and ship a container to k8s".
+    tags: [ci-cd, docker, kubernetes, k8s, deploy, security-scan, registry, pipeline]
+    entry_point: true
+    param_schema:
+      repo: String
+      branch: String
+      image_tag: String
+      registry_url: String
+      k8s_namespace: String
+      replicas: Int
+
+  - qualified_name: jenkins.pipeline.MultiModuleBuild
+    summary: >-
+      Build, test, and archive every module of a multi-module project in parallel
+      via foreach fan-out, with per-module stash and retry mixins. Use for
+      "build all modules of a monorepo / multi-module Gradle project".
+    tags: [ci-cd, multi-module, monorepo, gradle, foreach, fanout, parallel, build]
+    entry_point: true
+    param_schema:
+      repo: String
+      branch: String
+      modules: Json
+
+  - qualified_name: jenkins.pipeline.FullCIPipeline
+    summary: >-
+      Run a comprehensive CI pipeline with parallel quality gates — checkout,
+      Maven build, then parallel tests + SonarQube code quality + Trivy security
+      scan, followed by artifact archival, a rolling deploy, and notification.
+      Use for "full CI with quality gates before deploy".
+    tags: [ci-cd, quality-gates, parallel, sonarqube, security-scan, deploy, pipeline, comprehensive]
+    entry_point: true
+    param_schema:
+      repo: String
+      branch: String
+      deploy_env: String
+      notify_channel: String
+
+facets:
+  # --- jenkins.scm : source control ------------------------------------------
+  - qualified_name: jenkins.scm.GitCheckout
+    namespace: jenkins.scm
+    purpose: >-
+      Clone/checkout a Git repository at a branch (with optional depth and
+      submodules), returning workspace + commit metadata. Has a 10-minute timeout.
+    signature: "GitCheckout(repo: String, branch: String = \"main\", depth: Int = 0, submodules: Boolean = false) => (info: ScmInfo)"
+    effect: external
+    cost: moderate
+
+  - qualified_name: jenkins.scm.GitMerge
+    namespace: jenkins.scm
+    purpose: Merge a source branch into a target branch within an existing workspace.
+    signature: "GitMerge(workspace_path: String, source_branch: String, target_branch: String = \"main\") => (info: ScmInfo)"
+    effect: external
+    cost: moderate
+
+  # --- jenkins.build : build tools -------------------------------------------
+  - qualified_name: jenkins.build.MavenBuild
+    namespace: jenkins.build
+    purpose: Run a Maven build with configurable goals, JDK version, and profiles.
+    signature: "MavenBuild(workspace_path: String, goals: String = \"clean package\", profiles: String = \"\", jdk_version: String = \"17\", skip_tests: Boolean = false) => (result: BuildResult)"
+    effect: external
+    cost: expensive
+
+  - qualified_name: jenkins.build.GradleBuild
+    namespace: jenkins.build
+    purpose: Run a Gradle build with configurable tasks and JDK version.
+    signature: "GradleBuild(workspace_path: String, tasks: String = \"build\", jdk_version: String = \"17\") => (result: BuildResult)"
+    effect: external
+    cost: expensive
+
+  - qualified_name: jenkins.build.NpmBuild
+    namespace: jenkins.build
+    purpose: Run an npm build script with a configurable Node.js version.
+    signature: "NpmBuild(workspace_path: String, build_script: String = \"build\", node_version: String = \"20\") => (result: BuildResult)"
+    effect: external
+    cost: expensive
+
+  - qualified_name: jenkins.build.DockerBuild
+    namespace: jenkins.build
+    purpose: Build a Docker image from a Dockerfile with optional build arguments.
+    signature: "DockerBuild(workspace_path: String, dockerfile: String = \"Dockerfile\", image_tag: String, build_args: String = \"\") => (result: BuildResult)"
+    effect: external
+    cost: expensive
+
+  # --- jenkins.test : test + quality analysis --------------------------------
+  - qualified_name: jenkins.test.RunTests
+    namespace: jenkins.test
+    purpose: Run a test suite using the given framework and report results with coverage.
+    signature: "RunTests(workspace_path: String, framework: String = \"junit\", suite: String = \"unit\", parallel: Boolean = true) => (report: TestReport)"
+    effect: external
+    cost: expensive
+
+  - qualified_name: jenkins.test.CodeQuality
+    namespace: jenkins.test
+    purpose: Run static code quality analysis with a tool such as SonarQube.
+    signature: "CodeQuality(workspace_path: String, tool: String = \"sonarqube\", config_path: String = \"sonar-project.properties\") => (report: QualityReport)"
+    effect: external
+    cost: expensive
+
+  - qualified_name: jenkins.test.SecurityScan
+    namespace: jenkins.test
+    purpose: Scan the workspace for security vulnerabilities at a given severity threshold.
+    signature: "SecurityScan(workspace_path: String, scanner: String = \"trivy\", severity_threshold: String = \"HIGH\") => (report: QualityReport)"
+    effect: external
+    cost: moderate
+
+  # --- jenkins.artifact : archival + publishing ------------------------------
+  - qualified_name: jenkins.artifact.ArchiveArtifacts
+    namespace: jenkins.artifact
+    purpose: >-
+      Archive workspace build outputs matching include/exclude patterns
+      (workspace file collection, no remote system).
+    signature: "ArchiveArtifacts(workspace_path: String, includes: String, excludes: String = \"\") => (artifact: Artifact)"
+    effect: io
+    cost: cheap
+
+  - qualified_name: jenkins.artifact.PublishToRegistry
+    namespace: jenkins.artifact
+    purpose: Publish a build artifact to a remote registry (e.g. Maven Central, npm).
+    signature: "PublishToRegistry(artifact_path: String, registry_url: String, group_id: String = \"\", version: String = \"\") => (artifact: Artifact)"
+    effect: external
+    cost: moderate
+
+  - qualified_name: jenkins.artifact.DockerPush
+    namespace: jenkins.artifact
+    purpose: Push a tagged Docker image to a container registry.
+    signature: "DockerPush(image_tag: String, registry_url: String) => (artifact: Artifact)"
+    effect: external
+    cost: expensive
+
+  # --- jenkins.deploy : deployment + rollback --------------------------------
+  - qualified_name: jenkins.deploy.DeployToEnvironment
+    namespace: jenkins.deploy
+    purpose: Deploy an artifact to a named environment using a rolling or blue-green strategy.
+    signature: "DeployToEnvironment(artifact_path: String, environment: String = \"staging\", strategy: String = \"rolling\", version: String = \"\") => (result: DeployResult)"
+    effect: external
+    cost: expensive
+
+  - qualified_name: jenkins.deploy.DeployToK8s
+    namespace: jenkins.deploy
+    purpose: Deploy a container image to a Kubernetes cluster with replica scaling.
+    signature: "DeployToK8s(artifact_path: String, k8s_namespace: String = \"default\", cluster: String = \"default\", replicas: Int = 2, image_tag: String = \"\") => (result: DeployResult)"
+    effect: external
+    cost: expensive
+
+  - qualified_name: jenkins.deploy.RollbackDeploy
+    namespace: jenkins.deploy
+    purpose: Roll back a previous deployment by deploy ID and environment.
+    signature: "RollbackDeploy(deploy_id: String, environment: String) => (result: DeployResult)"
+    effect: external
+    cost: moderate
+
+  # --- jenkins.notify : notifications ----------------------------------------
+  - qualified_name: jenkins.notify.SlackNotify
+    namespace: jenkins.notify
+    purpose: Send a Slack message to a channel with optional user mention.
+    signature: "SlackNotify(channel: String, message: String, color: String = \"good\", mention: String = \"\") => (sent: Boolean, timestamp: String)"
+    effect: external
+    cost: cheap
+
+  - qualified_name: jenkins.notify.EmailNotify
+    namespace: jenkins.notify
+    purpose: Send an email notification with an optional build log attachment.
+    signature: "EmailNotify(recipients: String, subject: String, body: String, attach_log: Boolean = false) => (sent: Boolean, message_id: String)"
+    effect: external
+    cost: cheap

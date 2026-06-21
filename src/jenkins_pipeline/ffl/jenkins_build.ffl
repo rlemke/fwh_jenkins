@@ -6,21 +6,21 @@ namespace jenkins.build {
     event facet MavenBuild(workspace_path: String,
         goals: String = "clean package", profiles: String = "",
         jdk_version: String = "17",
-        skip_tests: Boolean = false) => (result: BuildResult)
+        skip_tests: Boolean = false) => (result: BuildResult) with Effect(kind = "external") with Cost(tier = "expensive")
 
     /** Executes a Gradle build with configurable tasks and JDK version. */
     event facet GradleBuild(workspace_path: String,
         tasks: String = "build",
-        jdk_version: String = "17") => (result: BuildResult)
+        jdk_version: String = "17") => (result: BuildResult) with Effect(kind = "external") with Cost(tier = "expensive")
 
     /** Runs an npm build script with a configurable Node.js version. */
     event facet NpmBuild(workspace_path: String,
         build_script: String = "build",
-        node_version: String = "20") => (result: BuildResult)
+        node_version: String = "20") => (result: BuildResult) with Effect(kind = "external") with Cost(tier = "expensive")
 
     /** Builds a Docker image from a Dockerfile with optional build arguments. */
     event facet DockerBuild(workspace_path: String,
         dockerfile: String = "Dockerfile",
         image_tag: String,
-        build_args: String = "") => (result: BuildResult)
+        build_args: String = "") => (result: BuildResult) with Effect(kind = "external") with Cost(tier = "expensive")
 }
