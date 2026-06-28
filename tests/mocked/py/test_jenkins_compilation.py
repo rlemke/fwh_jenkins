@@ -13,7 +13,7 @@ from facetwork.parser import FFLParser
 from facetwork.source import CompilerInput, FileOrigin, SourceEntry
 from facetwork.validator import validate
 
-_AFL_DIR = (
+_FW_DIR = (
     Path(__file__).resolve().parent.parent.parent.parent / "src" / "jenkins_pipeline" / "ffl"
 )
 
@@ -22,7 +22,7 @@ def _compile(*filenames: str) -> dict:
     """Compile one or more FFL files from the Jenkins example directory."""
     entries = []
     for i, name in enumerate(filenames):
-        path = _AFL_DIR / name
+        path = _FW_DIR / name
         entries.append(
             SourceEntry(
                 text=path.read_text(),
@@ -257,10 +257,10 @@ class TestJenkinsPipelines:
         """The CLI --check flag succeeds for jenkins_pipelines.afl."""
         args = [
             "--primary",
-            str(_AFL_DIR / "jenkins_pipelines.ffl"),
+            str(_FW_DIR / "jenkins_pipelines.ffl"),
         ]
         for dep in self._DEPS:
-            args.extend(["--library", str(_AFL_DIR / dep)])
+            args.extend(["--library", str(_FW_DIR / dep)])
         args.append("--check")
         result = main(args)
         assert result == 0
