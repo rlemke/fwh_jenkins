@@ -14,6 +14,21 @@ The 17 handlers are deterministic simulators — they return realistic
 shapes without actually invoking Jenkins, Maven, npm, kubectl, etc. — so
 the example can run fully offline.
 
+## Feature specifications
+
+Every feature has a spec in [**`docs/`**](docs/README.md) — how it works,
+whether/how it **fans out**, the **data & fields** it produces, the
+**external libraries/binaries** it uses, its **facets & workflows** (with
+`Effect`/`Cost`), and its **cache/output**. Start with the flagship
+[**CI/CD Pipelines**](docs/pipelines.md) (the four composed workflows that
+demonstrate mixin composition); the full index is in
+[`docs/README.md`](docs/README.md).
+
+| Area | Specs |
+|------|-------|
+| **Flagship & cross-cutting** | [pipelines](docs/pipelines.md) · [mixins](docs/mixins.md) · [types](docs/types.md) · [tools-and-simulators](docs/tools-and-simulators.md) · [catalog](docs/catalog.md) |
+| **CI/CD operations** | [scm](docs/scm.md) · [build](docs/build.md) · [test](docs/test.md) · [artifact](docs/artifact.md) · [deploy](docs/deploy.md) · [notify](docs/notify.md) |
+
 Discovered by the Facetwork runner via the `facetwork.examples` entry point
 declared in `pyproject.toml`. After `pip install -e .`, Facetwork's
 `scripts/start-runner --example jenkins` and `scripts/seed-examples`
