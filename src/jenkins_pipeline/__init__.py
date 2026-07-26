@@ -3,10 +3,9 @@ that simulate a complete Jenkins build/test/deploy pipeline.
 
 The example showcases:
 
-- Mixin composition (Retry, Timeout, Credentials, RequiresApproval, …)
-- Prompt + script blocks for build glue
-- `andThen when` branching for environment-aware deploys
-- Rollback / failure-recovery patterns
+- Mixin composition (Retry, Timeout, Credentials, Notification, AgentLabel, Stash)
+- Implicit facets + `andThen` / `yield` / `foreach` pipeline composition
+- Four composed pipelines (JavaMavenCI, DockerK8sDeploy, MultiModuleBuild, FullCIPipeline)
 - 17 simulator handlers across scm / build / test / artifact / deploy / notify
 
 Discovered by the Facetwork runner via the ``facetwork.domains`` entry
@@ -16,7 +15,7 @@ point declared in ``pyproject.toml``::
     jenkins = "jenkins_pipeline:domain"
 
 Once ``pip install -e .`` has been run from this repository, Facetwork's
-``scripts/start-runner --example jenkins`` and ``scripts/seed-examples``
+``fw runner start --domain jenkins`` and ``fw ffl seed``
 will pick this package up automatically — no edits to the Facetwork
 repository required.
 """

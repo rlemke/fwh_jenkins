@@ -4,14 +4,14 @@ This repository is a **standalone Facetwork example package**. The Facetwork
 platform (workflow compiler + runtime) lives at
 `/Users/ralph_lemke/facetwork`; this repo only contains the Jenkins-specific
 FFL, handlers, and tools. The two are wired together via the
-`facetwork.examples` entry point in `pyproject.toml`.
+`facetwork.domains` entry point in `pyproject.toml`.
 
 ## Quick orientation
 
 ```
 fwh_jenkins/
-├── pyproject.toml                       # declares the facetwork.examples entry point
-├── src/jenkins_pipeline/__init__.py     # exports `example: ExamplePackage`
+├── pyproject.toml                       # declares the facetwork.domains entry point
+├── src/jenkins_pipeline/__init__.py     # exports `domain: DomainPackage`
 ├── src/jenkins_pipeline/handlers/       # 6 event-facet modules + shared/ shim
 ├── src/jenkins_pipeline/ffl/            # FFL workflows + mixins
 ├── src/jenkins_pipeline/tools/          # CLI utilities + _lib/ (simulators)
@@ -26,8 +26,8 @@ fwh_jenkins/
 pip install -e .
 
 # From a Facetwork checkout:
-scripts/seed-examples --include jenkins
-scripts/start-runner --example jenkins -- --log-format text
+fw ffl seed --include jenkins
+fw runner start --domain jenkins -- --log-format text
 
 # Run as a standalone agent (skip the registry runner path):
 PYTHONPATH=src python agent.py
@@ -65,7 +65,7 @@ The shim lives at `src/jenkins_pipeline/handlers/shared/jenkins_utils.py`.
 It re-exports the per-domain modules via the **fully-qualified** package
 path (`from jenkins_pipeline.tools._lib.scm import …`) — never the bare
 `_lib` name — so this package coexists cleanly with sibling
-`facetwork.examples` packages (osm-geocoder, noaa-weather) that also ship
+`facetwork.domains` packages (osm-geocoder, noaa-weather) that also ship
 their own `_lib` directories.
 
 ### Handler / domain map
@@ -108,7 +108,7 @@ MavenBuild: clean package in /tmp/app
 4. Add a `_<facet_lower>_handler(payload)` to the matching
    `handlers/<domain>_handlers.py` and wire it into `_DISPATCH`.
 5. Drop the FFL declaration into `src/jenkins_pipeline/ffl/`.
-6. Re-run `scripts/seed-examples --include jenkins` so the new flow
+6. Re-run `fw ffl seed --include jenkins` so the new flow
    shows up in the dashboard.
 
 ## Code review checklist

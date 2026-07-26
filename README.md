@@ -29,9 +29,9 @@ demonstrate mixin composition); the full index is in
 | **Flagship & cross-cutting** | [pipelines](docs/pipelines.md) · [mixins](docs/mixins.md) · [types](docs/types.md) · [tools-and-simulators](docs/tools-and-simulators.md) · [catalog](docs/catalog.md) |
 | **CI/CD operations** | [scm](docs/scm.md) · [build](docs/build.md) · [test](docs/test.md) · [artifact](docs/artifact.md) · [deploy](docs/deploy.md) · [notify](docs/notify.md) |
 
-Discovered by the Facetwork runner via the `facetwork.examples` entry point
+Discovered by the Facetwork runner via the `facetwork.domains` entry point
 declared in `pyproject.toml`. After `pip install -e .`, Facetwork's
-`scripts/start-runner --example jenkins` and `scripts/seed-examples`
+`fw runner start --domain jenkins` and `fw ffl seed`
 pick this package up automatically.
 
 ## Install
@@ -42,14 +42,14 @@ cd ~/fw_handlers/fwh_jenkins
 pip install -e .
 ```
 
-This registers the package under the `facetwork.examples` entry-point group,
+This registers the package under the `facetwork.domains` entry-point group,
 making it discoverable by any Facetwork installation in the same environment.
 
 ## Run from a Facetwork checkout
 
 ```bash
-scripts/seed-examples --include jenkins                  # one-time, seeds FFL
-scripts/start-runner --example jenkins -- --log-format text
+fw ffl seed --include jenkins                  # one-time, seeds FFL
+fw runner start --domain jenkins -- --log-format text
 ```
 
 ## Run a single CI/CD operation from the command line
@@ -73,7 +73,7 @@ detects an invalid configuration.
 
 ```
 fwh_jenkins/
-├── pyproject.toml                  # facetwork.examples entry point
+├── pyproject.toml                  # facetwork.domains entry point
 ├── README.md
 ├── CLAUDE.md                       # guidance for Claude Code in this repo
 ├── USER_GUIDE.md                   # human-facing walkthrough
@@ -81,7 +81,7 @@ fwh_jenkins/
 ├── agent.py                        # standalone AgentPoller variant
 ├── tests/                          # mocked + real test trees
 └── src/jenkins_pipeline/
-    ├── __init__.py                 # exports `example: ExamplePackage`
+    ├── __init__.py                 # exports `domain: DomainPackage`
     ├── handlers/                   # 6 event-facet modules + shared/ shim
     │   ├── scm_handlers.py
     │   ├── build_handlers.py
