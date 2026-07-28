@@ -39,6 +39,7 @@ facets.
 | [artifact.md](artifact.md) | `jenkins.artifact` — `ArchiveArtifacts` (the lone `io`/`cheap` facet) / `PublishToRegistry` / `DockerPush`; produces `Artifact`. |
 | [deploy.md](deploy.md) | `jenkins.deploy` — `DeployToEnvironment` / `DeployToK8s` / `RollbackDeploy`; produces `DeployResult`. |
 | [notify.md](notify.md) | `jenkins.notify` — `SlackNotify` / `EmailNotify`; the only facets returning a flat tuple instead of a schema. |
+| [ffl-examples.md](ffl-examples.md) | **Usage patterns.** A gallery of complete, compile-checked FFL examples over these facets, with a Jenkins→FFL translation table — mixins as `options`/`agent`/`credentials`, parallel stages, `when` gates, `catch`, matrix `foreach`. |
 
 ---
 

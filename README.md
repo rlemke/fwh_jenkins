@@ -14,6 +14,57 @@ The 17 handlers are deterministic simulators — they return realistic
 shapes without actually invoking Jenkins, Maven, npm, kubectl, etc. — so
 the example can run fully offline.
 
+## FFL at a glance
+
+Pipelines here are written in [FFL](https://github.com/rlemke/facetwork/blob/main/docs/reference/language/grammar.md),
+Facetwork's workflow language. A stage is a step (`name = Facet(args)`), ordering
+comes from references, and Jenkins' `options`/`agent`/`credentials` decorations
+are **mixins** applied at the call site:
+
+```ffl
+namespace my.ci {
+
+    use jenkins.scm
+    use jenkins.build
+    use jenkins.test
+
+    /** Checkout, build, and test a Maven project. */
+    workflow QuickBuild(repo: String, branch: String = "main") => (version: String, passed: Long) andThen {
+
+        src = jenkins.scm.GitCheckout(
+            repo = $.repo,
+            branch = $.branch) with Credentials(credentialId = "git-ssh-key", type = "ssh")
+
+        build = jenkins.build.MavenBuild(
+            workspace_path = src.info.workspace_path,
+            goals = "clean package") with Timeout(minutes = 20) with Retry(maxAttempts = 2, backoffSeconds = 60)
+
+        tests = jenkins.test.RunTests(
+            workspace_path = src.info.workspace_path,
+            framework = "junit",
+            suite = "unit")
+
+        yield QuickBuild(version = build.result.version, passed = tests.report.passed)
+    }
+}
+```
+
+```bash
+fw ffl run --primary my.ffl \
+  --library src/jenkins_pipeline/ffl/jenkins_types.ffl \
+  --library src/jenkins_pipeline/ffl/jenkins_mixins.ffl \
+  --library src/jenkins_pipeline/ffl/jenkins_scm.ffl \
+  --library src/jenkins_pipeline/ffl/jenkins_build.ffl \
+  --library src/jenkins_pipeline/ffl/jenkins_test.ffl \
+  --workflow my.ci.QuickBuild --inputs '{"repo": "github.com/example/app"}'
+```
+
+📖 **[docs/ffl-examples.md](docs/ffl-examples.md)** — the full example gallery,
+with a Jenkins→FFL translation table: parallel stages, `when` deploy gates,
+`catch` as `post { failure }`, matrix builds with `foreach`, a container
+pipeline, and reusing the shipped pipelines. Every snippet there is
+compile-checked, and the simulators mean they all run offline.
+
 ## Feature specifications
 
 Every feature has a spec in [**`docs/`**](docs/README.md) — how it works,
